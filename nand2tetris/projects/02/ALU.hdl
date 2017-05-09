@@ -43,4 +43,47 @@ CHIP ALU {
 
     PARTS:
    // Put you code here:
+
+   // First Zero the X
+   Mux16(a=x,b=false,sel=zx,out=outXZeroed);
+   //Negate Zeroed Value
+   Not16(in=outXZeroed,out=notXZeroed);
+   // Select Negation   
+   Mux16(a=outXZeroed,b=notXZeroed,sel=nx,out=outXInNeg);
+
+
+
+   //Zero the Y
+   Mux16(a=y,b=false,sel=zy,out=outYZeroed);
+   // Negate Zeroed Y Value
+   Not16(in=outYZeroed,out=notYZeroed);
+   //Select Negation
+   Mux16(a=outYZeroed,b=notYZeroed,sel=ny,out=outYInNeg);
+
+
+   // And for f pin
+
+   And16(a=outXInNeg,b=outYInNeg, out=outAndXYInternal);
+
+   // Addition for f pin
+
+   Add16(a=outXInNeg,b=outYInNeg,out=outAddXYInternal);
+
+   // select on f pin value 
+   Mux16(a=outAndXYInternal,b=outAddXYInternal,sel=f,out=outXYAndOrAdd);
+
+   
+   //decide to post-negate output
+   Not16(in=outXYAndOrAdd,out=notOutXYAndOrAdd);
+
+   // negative pin is the value of demux of the MSB of the output
+   Mux16(a=outXYAndOrAdd,b=notOutXYAndOrAdd,sel=no,out[15]=ng,out[0..7]=out1,out[8..15]=out2,out=out);
+   
+   // zr pin is a 16 way OR of the output
+
+   Or8Way(in=out1,out=orout1);
+   Or8Way(in=out2,out=orout2);
+   Or(a=orout1,b=orout2,out=outNotZero);
+   Not(in=outNotZero,out=zr);
+
 }
