@@ -17,4 +17,33 @@ CHIP PC {
 
     PARTS:
     // Put your code here:
+    // check reset
+
+    Mux16(a=in,b=false,sel=reset,out=checkReset);
+
+    // reset takes precedence over everything
+
+    Mux16(a=in,b=checkReset,sel=reset,out=loadOrResetMux);
+
+    // check whether we return the last result or a new one
+    
+    Or(a=load,b=reset,out=loadOrReset);
+
+    Or(a=loadOrReset,b=inc,out=shouldChangeOutput);
+    
+
+    // whether the last result is passed into the adder or not
+
+    Not(in=loadOrReset,out=notLoadOrReset);
+
+    And(a=notLoadOrReset,b=inc,out=shouldIncrement);
+
+    Mux16(a=outRegisterVals,b=loadOrResetMux,sel=loadOrReset,out=savedOrLoadResetRegister);
+
+    Add16(a=savedOrLoadResetRegister,b[0]=shouldIncrement,b[1..15]=false,out=addInternalRegister);
+
+    Register(in=addInternalRegister,load=shouldChangeOutput,out[0..15]=outRegisterVals,out[0..15]=out);
+
+    // split outRegistervals to out and back to the outRegisterVals to save the last output
+    
 }

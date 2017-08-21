@@ -16,4 +16,25 @@ CHIP RAM64 {
 
     PARTS:
     // Put your code here:
+
+    // first 3 bits select the RAM, last 3 bits the space in the ram
+    
+    //which chip to load to, not all addresses
+
+    DMux8Way(in=load,sel=address[3..5],a=shouldLoad1,b=shouldLoad2,c=shouldLoad3,d=shouldLoad4,e=shouldLoad5,f=shouldLoad6,g=shouldLoad7,h=shouldLoad8);
+
+    RAM8(in=in,load=shouldLoad1,address=address[0..2],out=out1); //0..7  000000 - 000111
+    RAM8(in=in,load=shouldLoad2,address=address[0..2],out=out2); //8..15 001000 - 001111
+    RAM8(in=in,load=shouldLoad3,address=address[0..2],out=out3); //16-23 010000 - 010111
+    RAM8(in=in,load=shouldLoad4,address=address[0..2],out=out4); //24-31 011000 - 011111
+    RAM8(in=in,load=shouldLoad5,address=address[0..2],out=out5); //32-39 100000 - 100111
+    RAM8(in=in,load=shouldLoad6,address=address[0..2],out=out6); //40-47 101000 - 101111
+    RAM8(in=in,load=shouldLoad7,address=address[0..2],out=out7); //48-55 110000 - 110111
+    RAM8(in=in,load=shouldLoad8,address=address[0..2],out=out8); //56-63 111000 - 111111
+
+    // selection is if number is greater than 32 sets the
+
+    Mux8Way16(a=out1,b=out2,c=out3,d=out4,e=out5,f=out6,g=out7,h=out8,sel=address[3..5],out=out);
+
+
 }
