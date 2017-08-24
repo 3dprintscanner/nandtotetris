@@ -28,4 +28,11 @@ CHIP Memory {
 
     PARTS:
     // Put your code here:
+    // take the top bit to decide which ram to load
+    DMux(in=load,sel=address[14],a=shouldLoadRam,b=shouldLoadScreen);
+    RAM16K(in=in,load=shouldLoadRam,address=address[0..13],out=out1);
+    Screen(in=in,load=shouldLoadScreen,address=address[0..12],out=out2);
+    Keyboard(out=outKeyboard);
+    Mux4Way16(a=out1,b=out1,c=out2,d=outKeyboard,sel=address[13..14],out=out);
+
 }

@@ -40,4 +40,68 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+    // parse the instruction with instruction[15]
+    // if A instruction, load the a register with the value
+
+    Mux16(a=instruction,b=outALU,sel=instruction[15],out=outARegMux);
+    //should load A Register if A instruction OR d3 bit set to 1 and C instruction
+    
+    And(a=instruction[15],b=instruction[5],out=shouldLoadIntoARegister);
+    And(a=instruction[15],b=instruction[4],out=shouldLoadIntoDRegister);
+
+    // WriteM will be set to the 3rd destination bit and C instruction
+    And(a=instruction[15],b=instruction[3],out=writeM);
+
+
+
+    Not(in=instruction[15],out=isAInstruction);
+
+    Or(a=isAInstruction,b=shouldLoadIntoARegister,out=shouldLoadARegister);
+
+    Register(in=outARegMux,load=shouldLoadARegister,out=outARegister,out[0..14]=addressM); // A Register and AddressM
+
+    Register(in=outALU,load=shouldLoadIntoDRegister,out=outDRegister); // D Register
+
+    // program counter should load if there is a jump, otherwise should inc, depends on ALU output
+
+    // selecting whether to use A register value to ALU if A bit is set on C instruction
+    // bit 12 and bit 15 are high
+
+    And(a=instruction[12],b=instruction[15],out=shouldLoadARegisterIntoALU);
+    
+    Mux16(a=outARegister,b=inM,sel=shouldLoadARegisterIntoALU,out=outAInMux);
+
+    ALU(x=outDRegister, y=outAInMux,zx=instruction[11],nx=instruction[10],zy=instruction[9],ny=instruction[8],f=instruction[7],no=instruction[6],out=outM,out=outALU,out[15]=negOrPos,out[0..7]=outFirstHalf,out[8..15]=outSecondHalf,zr=isZero,ng=isNegative);
+    // if ALU MSB is high then is negative MSB is low then can be 0 or positive, 
+
+    Not(in=negOrPos,out=isNotNegative);
+
+    Or8Way(in=outFirstHalf,out=lowerBitsPositive);
+    Or8Way(in=outSecondHalf,out=upperBitsSet);
+    Or(a=lowerBitsPositive,b=upperBitsSet,out=someBitsSet);
+
+    // out > 0
+    And(a=isNotNegative,b=someBitsSet,out=greaterThanZero);
+
+    // out < 0
+
+    // change this for ZR and NG flags on ALU
+
+    // 3 ANDs for each jump bit then combine into OR for load
+
+    And(a=isNegative,b=instruction[2],out=shouldJumpNegative);
+    And(a=isZero,b=instruction[1],out=shouldJumpZero);
+    And(a=greaterThanZero,b=instruction[0],out=shouldJumpPositive);
+
+    // should Jump is C instruction and 1 jump condition fired;
+    Or(a=shouldJumpNegative,b=shouldJumpPositive,out=shouldJumpNegPos);
+    Or(a=shouldJumpNegPos,b=shouldJumpZero,out=shouldJump);
+    And(a=instruction[15],b=shouldJump,out=shouldLoad);
+    Not(in=shouldLoad,out=shouldInc);
+
+
+    PC(in=outARegister, load=shouldLoad,inc=shouldInc,reset=reset,out[0..14]=pc);
+
+    
+
 }
