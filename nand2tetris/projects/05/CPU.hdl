@@ -74,16 +74,12 @@ CHIP CPU {
     ALU(x=outDRegister, y=outAInMux,zx=instruction[11],nx=instruction[10],zy=instruction[9],ny=instruction[8],f=instruction[7],no=instruction[6],out=outM,out=outALU,out[15]=negOrPos,out[0..7]=outFirstHalf,out[8..15]=outSecondHalf,zr=isZero,ng=isNegative);
     // if ALU MSB is high then is negative MSB is low then can be 0 or positive, 
 
-    Not(in=negOrPos,out=isNotNegative);
 
-    Or8Way(in=outFirstHalf,out=lowerBitsPositive);
-    Or8Way(in=outSecondHalf,out=upperBitsSet);
-    Or(a=lowerBitsPositive,b=upperBitsSet,out=someBitsSet);
+    // or just !ZR & !NG
 
-    // out > 0
-    And(a=isNotNegative,b=someBitsSet,out=greaterThanZero);
-
-    // out < 0
+    Not(in=isNegative,out = isPositive);
+    Not(in=isZero,out = isNotZero);
+    And(a=isPositive,b=isNotZero,out=isGreaterthanZero);
 
     // change this for ZR and NG flags on ALU
 
@@ -91,15 +87,14 @@ CHIP CPU {
 
     And(a=isNegative,b=instruction[2],out=shouldJumpNegative);
     And(a=isZero,b=instruction[1],out=shouldJumpZero);
-    And(a=greaterThanZero,b=instruction[0],out=shouldJumpPositive);
+    And(a=isGreaterthanZero,b=instruction[0],out=shouldJumpPositive);
 
     // should Jump is C instruction and 1 jump condition fired;
     Or(a=shouldJumpNegative,b=shouldJumpPositive,out=shouldJumpNegPos);
     Or(a=shouldJumpNegPos,b=shouldJumpZero,out=shouldJump);
     And(a=instruction[15],b=shouldJump,out=shouldLoad);
     Not(in=shouldLoad,out=shouldInc);
-
-
+ 
     PC(in=outARegister, load=shouldLoad,inc=shouldInc,reset=reset,out[0..14]=pc);
 
     
